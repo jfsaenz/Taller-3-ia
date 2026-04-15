@@ -25,19 +25,72 @@ from src.predicate_logic import ExistsGoal, KnowledgeBase, Predicate, Rule, Term
 
 
 def crear_kb() -> KnowledgeBase:
-    """Construye la KB según la narrativa del módulo."""
     kb = KnowledgeBase()
 
-    # Constantes del caso
-    reynaldo       = Term("reynaldo")
-    margot         = Term("margot")
-    pablo          = Term("pablo")
-    bernardo       = Term("bernardo")
-    frasco_arsenico = Term("frasco_arsenico")
+    # Constantes
+    reynaldo = Term("reynaldo")
+    margot = Term("margot")
+    pablo = Term("pablo")
+    bernardo = Term("bernardo")
+    frasco = Term("frasco_arsenico")
 
-    # === YOUR CODE HERE ===
+    # ---------------- HECHOS ----------------
 
-    # === END YOUR CODE ===
+    kb.add_fact(Predicate("huellas_en", (reynaldo, frasco)))
+
+    kb.add_fact(Predicate("lejos_escena", (pablo,)))
+    kb.add_fact(Predicate("lejos_escena", (bernardo,)))
+
+    kb.add_fact(Predicate("acusa", (pablo, reynaldo)))
+
+    kb.add_fact(Predicate("da_coartada", (margot, reynaldo)))
+    kb.add_fact(Predicate("da_coartada", (reynaldo, margot)))
+
+    kb.add_fact(Predicate("sin_coartada_verificada", (reynaldo,)))
+
+    # ---------------- REGLAS ----------------
+
+    kb.add_rule(Rule(
+        head=Predicate("evidencia_directa", (Term("$X"),)),
+        body=(Predicate("huellas_en", (Term("$X"), frasco)),)
+    ))
+
+    kb.add_rule(Rule(
+        head=Predicate("descartado", (Term("$X"),)),
+        body=(Predicate("lejos_escena", (Term("$X"),)),)
+    ))
+
+    kb.add_rule(Rule(
+        head=Predicate("testimonio_confiable", (Term("$X"), Term("$Y"))),
+        body=(
+            Predicate("acusa", (Term("$X"), Term("$Y"))),
+            Predicate("descartado", (Term("$X"),)),
+        )
+    ))
+
+    kb.add_rule(Rule(
+        head=Predicate("culpable", (Term("$X"),)),
+        body=(
+            Predicate("evidencia_directa", (Term("$X"),)),
+            Predicate("sin_coartada_verificada", (Term("$X"),)),
+        )
+    ))
+
+    kb.add_rule(Rule(
+        head=Predicate("encubridor", (Term("$X"),)),
+        body=(
+            Predicate("da_coartada", (Term("$X"), Term("$Y"))),
+            Predicate("culpable", (Term("$Y"),)),
+        )
+    ))
+
+    kb.add_rule(Rule(
+        head=Predicate("coartada_cruzada", (Term("$X"), Term("$Y"))),
+        body=(
+            Predicate("da_coartada", (Term("$X"), Term("$Y"))),
+            Predicate("da_coartada", (Term("$Y"), Term("$X"))),
+        )
+    ))
 
     return kb
 
@@ -49,18 +102,16 @@ CASE = CrimeCase(
     narrative=__doc__,
     description=(
         "La víctima fue envenenada con arsénico. "
-        "El mayordomo tiene las huellas en el frasco y solo cuenta con la coartada de la cocinera, "
-        "quien a su vez solo cuenta con la de él. Razona sobre evidencia física, testimonios "
-        "confiables y encubrimiento."
+        "El mayordomo tiene las huellas en el frasco y solo cuenta con la coartada de la cocinera."
     ),
     create_kb=crear_kb,
     queries=(
         QuerySpec(
-            description="¿Pablo está descartado como culpable?",
+            description="¿Pablo está descartado?",
             goal=Predicate("descartado", (Term("pablo"),)),
         ),
         QuerySpec(
-            description="¿El testimonio de Pablo contra Reynaldo es confiable?",
+            description="¿El testimonio de Pablo es confiable?",
             goal=Predicate("testimonio_confiable", (Term("pablo"), Term("reynaldo"))),
         ),
         QuerySpec(
@@ -68,11 +119,11 @@ CASE = CrimeCase(
             goal=Predicate("culpable", (Term("reynaldo"),)),
         ),
         QuerySpec(
-            description="¿Margot está encubriendo al culpable?",
+            description="¿Margot encubre?",
             goal=Predicate("encubridor", (Term("margot"),)),
         ),
         QuerySpec(
-            description="¿Existe coartada cruzada entre Margot y Reynaldo?",
+            description="¿Hay coartada cruzada?",
             goal=ExistsGoal("$X", Predicate("coartada_cruzada", (Term("$X"), Term("reynaldo")))),
         ),
     ),
