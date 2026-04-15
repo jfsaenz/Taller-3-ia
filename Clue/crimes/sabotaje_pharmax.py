@@ -33,14 +33,96 @@ def crear_kb() -> KnowledgeBase:
     kb = KnowledgeBase()
 
     # Constantes del caso
-    tec_rios       = Term("tec_rios")
+    tec_rios = Term("tec_rios")
     asistente_mora = Term("asistente_mora")
-    dra_santos     = Term("dra_santos")
-    director_vega  = Term("director_vega")
-    syntek_corp    = Term("syntek_corp")
-    sala_cultivos  = Term("sala_cultivos")
+    dra_santos = Term("dra_santos")
+    director_vega = Term("director_vega")
+    syntek_corp = Term("syntek_corp")
+    sala_cultivos = Term("sala_cultivos")
 
     # === YOUR CODE HERE ===
+
+    # Hechos
+    kb.add_fact(Predicate("doc_oficial_ausencia", (dra_santos,)))
+    kb.add_fact(Predicate("registro_conferencia", (director_vega,)))
+
+    kb.add_fact(Predicate("sin_coartada", (tec_rios,)))
+    kb.add_fact(Predicate("sin_coartada", (asistente_mora,)))
+
+    kb.add_fact(Predicate("acceso_registrado", (tec_rios, sala_cultivos)))
+    kb.add_fact(Predicate("acceso_registrado", (asistente_mora, sala_cultivos)))
+
+    kb.add_fact(Predicate("recibio_pagos", (tec_rios, syntek_corp)))
+    kb.add_fact(Predicate("empresa_beneficiada", (syntek_corp,)))
+
+    kb.add_fact(Predicate("acusa", (asistente_mora, tec_rios)))
+
+    # Reglas
+    kb.add_rule(
+        Rule(
+            head=Predicate("coartada_verificada", (Term("$X"),)),
+            body=(Predicate("doc_oficial_ausencia", (Term("$X"),)),),
+        )
+    )
+
+    kb.add_rule(
+        Rule(
+            head=Predicate("coartada_verificada", (Term("$X"),)),
+            body=(Predicate("registro_conferencia", (Term("$X"),)),),
+        )
+    )
+
+    kb.add_rule(
+        Rule(
+            head=Predicate("descartado", (Term("$X"),)),
+            body=(Predicate("coartada_verificada", (Term("$X"),)),),
+        )
+    )
+
+    kb.add_rule(
+        Rule(
+            head=Predicate("conflicto_intereses", (Term("$X"), Term("$E"))),
+            body=(
+                Predicate("recibio_pagos", (Term("$X"), Term("$E"))),
+                Predicate("empresa_beneficiada", (Term("$E"),)),
+            ),
+        )
+    )
+
+    kb.add_rule(
+        Rule(
+            head=Predicate("motivo_economico", (Term("$X"),)),
+            body=(Predicate("conflicto_intereses", (Term("$X"), Term("$E"))),),
+        )
+    )
+
+    kb.add_rule(
+        Rule(
+            head=Predicate("acceso_en_momento", (Term("$X"),)),
+            body=(Predicate("acceso_registrado", (Term("$X"), sala_cultivos)),),
+        )
+    )
+
+    kb.add_rule(
+        Rule(
+            head=Predicate("culpable", (Term("$X"),)),
+            body=(
+                Predicate("sin_coartada", (Term("$X"),)),
+                Predicate("motivo_economico", (Term("$X"),)),
+                Predicate("acceso_en_momento", (Term("$X"),)),
+            ),
+        )
+    )
+
+    kb.add_rule(
+        Rule(
+            head=Predicate("denuncia_informada", (Term("$X"), Term("$Y"))),
+            body=(
+                Predicate("acusa", (Term("$X"), Term("$Y"))),
+                Predicate("acceso_en_momento", (Term("$X"),)),
+            ),
+        )
+    )
 
     # === END YOUR CODE ===
 
