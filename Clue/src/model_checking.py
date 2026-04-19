@@ -132,7 +132,7 @@ def check_valid(formula: Formula) -> bool:
           Alternativamente, verifica que sea verdadera en TODOS los modelos.
     """
    
-
+    atoms = get_atoms(formula)
     models = get_all_models(atoms)
 
     for model in models:
